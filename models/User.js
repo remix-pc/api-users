@@ -45,7 +45,7 @@ class User{
 
         try {
        
-            var result = await db.select("id", "email", "role", "name").where({email: email}).table("users");
+            var result = await db.select("id", "email","password", "role", "name").where({email: email}).table("users");
 
             if(result.length > 0){
                 return result[0]
