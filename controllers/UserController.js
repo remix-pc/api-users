@@ -1,4 +1,6 @@
 const User = require("../models/User")
+const PasswordToken = require("../models/PasswordToken")
+
 
 
 class UserController{   
@@ -71,6 +73,65 @@ class UserController{
         }
 
     }
+
+    async remove(req, res) {
+        var id = req.params.id
+
+        var result = await User.delete(id)
+
+        if(result.status) {
+            res.status(200)
+            res.send("deletado do sistema.")
+        } else {
+            res.status(406)
+            res.send(result.error)
+        }
+
+    }
+
+    async recoverPassword(req, res) {
+        var email = req.body.email
+
+        var result = await PasswordToken.create(email)
+
+        console.log(result)
+        if(result.status) {
+
+            res.status(200)
+            res.send("token " + result.token)
+
+            //Para enviar e-mail para o usuário -> NodeMailer.send()
+
+        }else {
+            res.status(406)
+            res.send(result.erro)
+        }
+
+    }
+
+    async changePassword (req, res) {
+
+        var token = req.body.token
+        var password = req.body.password
+
+        var isTokenValid = await PasswordToken.validate(token)
+
+        if(isTokenValid.status){
+            
+            await User.changePassword(password, isTokenValid.token.user_id, isTokenValid.token.token)
+
+            res.status(200)
+
+            res.send("Senha alterada")
+
+
+
+        }else {
+            res.status(406)
+            res.send("Token inválido")
+        }
+
+    }   
 
 }
 

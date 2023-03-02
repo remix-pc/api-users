@@ -1,5 +1,7 @@
 const db = require("../database/Database")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+const PasswordToken = require("./PasswordToken");
+
 
 class User{
 
@@ -24,6 +26,26 @@ class User{
         try {
        
             var result = await db.select("id", "email", "role", "name").where({id: id}).table("users");
+
+            if(result.length > 0){
+                return result[0]
+            }else {
+                return undefined
+            }
+            
+        } catch(error) {
+            console.log(error)
+            return undefined
+        }
+
+
+    }
+
+    async findByEmail(email){
+
+        try {
+       
+            var result = await db.select("id", "email", "role", "name").where({email: email}).table("users");
 
             if(result.length > 0){
                 return result[0]
@@ -113,11 +135,40 @@ class User{
         } else {
             return {status: false, erro: "Usuário não existe."}
         }
+    }
 
+    async delete(id){
+
+       var user = await this.findById(id)
+
+       if(user != undefined) {
+
+        try {
+
+            await db.delete().where({id: id}).table("users")
+            return {status: true}
+
+        }catch(error) {
+            return {status: false, error: error}
+        }
+
+       }else {
+        return {status: false, error: "O usuário não existe"}
+       }
 
     }
 
 
+    async changePassword(newPassword, id, token){
+
+        var hash = await bcrypt.hash(newPassword, 10)
+
+      
+        await db.update({password: hash}).where({id: id}).table("users")
+        await PasswordToken.setUsed(token)
+
+
+    }
 }
 
 module.exports = new User()
